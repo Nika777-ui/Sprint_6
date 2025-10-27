@@ -1,19 +1,37 @@
 import pytest
 import allure
+from pages.main_page import MainPage
 
 @allure.feature('FAQ раздел')
 class TestFAQ:
-    @allure.title('Проверка выпадающих списков FAQ')
-    @pytest.mark.parametrize('question_number', [1, 2, 3, 4, 5, 6, 7, 8])
-    def test_faq_question(self, main_page, question_number):
-        """Проверяем что при клике на вопрос появляется ответ"""
+    @allure.title('Проверка выпадающих списков FAQ - вопрос {question_number}')
+    @pytest.mark.parametrize('question_number, expected_text', [
+        (1, "Сутки — 400 рублей. Оплата курьеру — наличными или картой."),
+        (2, "Пока что у нас так: один заказ — один самокат. Если хотите покататься с друзьями, можете просто сделать несколько заказов — один за другим."),
+        (3, "Допустим, вы оформляете заказ на 8 мая. Мы привозим самокат 8 мая в течение дня. Отсчёт времени аренды начинается с момента, когда вы оплатите заказ курьеру. Если мы привезли самокат 8 мая в 20:30, суточная аренда закончится 9 мая в 20:30."),
+        (4, "Только начиная с завтрашнего дня. Но скоро станем расторопнее."),
+        (5, "Пока что нет! Но если что-то срочное — всегда можно позвонить в поддержку по красивому номеру 1010."),
+        (6, "Самокат приезжает к вам с полной зарядкой. Этого хватает на восемь суток — даже если будете кататься без передышек и во сне. Зарядка не понадобится."),
+        (7, "Да, пока самокат не привезли. Штрафа не будет, объяснительной записки тоже не попросим. Все же свои."),
+        (8, "Да, обязательно. Всем самокатов! И Москве, и Московской области.")
+    ])
+    def test_faq_question(self, driver, question_number, expected_text):
+        """Проверяем что при клике на вопрос появляется правильный ответ"""
+        main_page = MainPage(driver)
+        
         with allure.step('Прокручиваем страницу к FAQ'):
             main_page.scroll_to_faq_section()
         
         with allure.step(f'Кликаем на вопрос {question_number}'):
             main_page.click_faq_question(question_number)
         
-        with allure.step(f'Проверяем что ответ {question_number} отображается'):
+        with allure.step(f'Проверяем ответ на вопрос {question_number}'):
             answer_text = main_page.get_faq_answer_text(question_number)
+            
+            # Проверяем что ответ не пустой
             assert answer_text != "", f"Ответ на вопрос {question_number} пустой"
-            print(f"Вопрос {question_number}: {answer_text[:50]}...")
+            
+            # Проверяем конкретный текст ответа
+            assert answer_text == expected_text, \
+                f"Неверный текст ответа на вопрос {question_number}. " \
+                f"Ожидалось: '{expected_text}', Получено: '{answer_text}'"
